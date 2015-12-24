@@ -1,0 +1,81 @@
+---
+layout: post
+title: "The Sqoop"
+date: 2014-08-07 07:42:42 -0500
+comments: false
+categories: [Big-Data, Hadoop, Sqoop, Java]
+---
+
+### Cadillacs & Commercial Data Tools
+
+I *really* like the Cadillac CTS-V Coupe, its high performance 556 horsepower V8 engine, its sculpted body style and its elegant interior.  As far as vehicles go the CTS-V tops the list and IMO is a perfect balance of performance and aesthetics.  Every time I see one my impulsive right brain is ready to buy but there's just one problem...my practical left brain kicks in and plays the **we can't afford it spade**.
+
+And so it is with proprietary databases and tooling offered by Oracle, Sybase, Terradata and Informatica.  Don't get me wrong I like the Cadillac, I want the Cadillac but I don't want to pay Cadillac prices.  This is so often the case when developing solutions with Cadillac databases...can we afford it?  In some cases **yes** and some **no** but even in those cases where we can, writing that 6 to 7 figure check stings a little (ok a lot) and inevitably theres some buyers remorse.
+
+Often what I see in business is solutions running old versions of commercial databases, in some cases way old...like 10+ years old.  It's the ol buy once and use forever theory.  I totally understand it...I mean if I'm gonna spend 6 figures on a databases then I'm gonna use it for. ev. er.
+
+Recently when I was pricing a database migration and upgrade the total initial buy-in cost was in the mid 6 figure range, not to mention another 5 figure yearly maintenance cost.  One of the dominate cost drivers was ETL tools.  Now again these are the Cadillacs of ETL tools, I mean you can extract data and transform it into a fruit salad with all the bells and whistles some of these tools have...**and that is awesome**...However the prevailing use-case I see is simply extracting, applying modest transformations and loading somewhere else for use.
+
+Don't misunderstand me...theres totally a place for these tools and I'm NOT against using them if the situation is right.  The probing question is what can be used to move data to-and-fro that doesn't hold the Cadillac price tag?  Simply put; Most of the time we don't need a Cadillac we need a Honda.  So what are our options?
+
+### Enter stage right...Sqoop and Hadoop.
+
+#### Sqoop is designed for transferring data between RDBMS and Hadoop.
+
+[Sqoop](http://en.wikipedia.org/wiki/Sqoop) is a simple tool implemented well and in software that can form a solid yet flexible base to build around.  Sqoop's purpose in life is to reach into databases, extract data you need, and place into Hadoop.  It accomplishes this by spawning Map-Reduce jobs that make parallel JDBC connections to a source, select data and place into [HDFS](http://en.wikipedia.org/wiki/HDFS#HDFS).  You have the full power of Hadoop at your disposal to mold and transform data.  Once refined Sqoop can export it into a target RDBMS of your choosing.  The good part is you can implement all of this with zero Software Licensing costs.
+
+### The Import
+
+Importing data is straight forward with the ``sqoop`` command.  The options file (sourceDB.options) contains common source database details such as connection URL, username and password.  The remaining flags control import aspects, for example which table to extract, which column to parallelize the extraction on (``-split-by [column]``), where to place data into Hadoop, how to determine what will be extracted (``--incremental, --check-column, --last-value``) and code generation arguments.  Sqoop will actually generate a Java class that can be used in MapReduce import and extract jobs.
+
+#### Importing with Sqoop
+
+``` bash
+sqoop --options-file sourceDB.options \
+--table BATTING \
+--split-by player_id \
+--target-dir staging/mlb/BATTING \
+--fields-terminated-by '|' \
+--append \
+--incremental lastmodified \
+--check-column last_updated \
+--last-value '2014-07-04 00:00:00.000' \
+--outdir sqoop/src/main/generated \
+--bindir sqoop/build/classes \
+--package-name net.cworks.sqoop
+
+/* remaining table imports */
+
+```
+
+The (``--target-dir``) argument is the HDFS location where raw data will be imported.  After importing data is visible in HDFS.
+
+{% img center /images/sqoop/sqoop_import.png %}
+
+### The Export
+
+Once you've massaged data according to your needs Sqoop can export to a RDBMS just as easy as importing it.
+
+#### Exporting with Sqoop
+
+In this example Sqoop extracts data from an HDFS location (``staging/mlb/BATTING``) and inserts it into a MySQL instance on another machine.  Details of the target database are specified in the targetDB.options file.  Before exporting you will need to create an empty database in MySQL with the proper table structure.
+
+``` bash
+sqoop --options-file targetDB.options \
+--table Batting \
+--fields-terminated-by '|' \
+--export-dir staging/mlb/BATTING
+
+/* remaining table exports */
+
+```
+
+{% img center /images/sqoop/sqoop_export.png %}
+
+### Voila a Honda
+
+So there you have it a low/no cost option for performing data extracts and imports using Sqoop and Hadoop.  Not the Cadillac solution by any means but workable and usable for a vast percentage of problems Solution Architects face in data conversions, transformations, migrations and upgrades.  Several things I appreciate about this combination is the simplicity of Sqoop, it could not be much simpler.  Hadoop as part of the equation buys you a lot of freedom with how data is managed and kept up to date by scheduling imports and exports.  I also like the flexibility; Sqoop works with anything that has a JDBC driver, it also provides a simple tool interface or a tighter code integration from a JVM language.  All in all a simple and sound stack for data pipelining...at a fraction of the Cadillac License costs.
+
+
+
+

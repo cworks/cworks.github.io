@@ -1,0 +1,94 @@
+---
+layout: post
+title: "Immediately Invoked Function Expressions"
+date: 2014-12-31 18:19:19 -0600
+comments: false
+categories: [Javascript]
+---
+
+Immediately invoked function expressions are quirky looking and cause confusion if you don't know what you're looking at.  The added parenthesis seems odd at first glance so lets take a closer look...
+
+###Coding Iffies
+Take these simple examples:
+
+{% highlight javascript %}
+// simple anonymous function
+(function() {
+    // local scoped var
+	var dt = new Date();
+	console.log('time: ' + dt);
+});
+
+// simple immediately invoked function expression
+(function() {
+    // local scoped var
+	var dt = new Date();
+	console.log('time: ' + dt);
+}()); // invocation () after function body
+{% endhighlight %}
+
+The first function is simply an anonymous function that never gets invoked, the second gets invoked immediately after its definition and its called an **Immediately Invoked Function Expression (IIFE, pronounced iffy)**.  We can pick that out because it has parenthesis after the function body closes.  Another syntax for an **iffy** is to place invocation parenthesis outside of the anonymous function.
+
+{% highlight javascript %}
+// alternative syntax for an immediately invoked function expression
+(function() {
+    // local scoped var
+	var dt = new Date();
+	console.log('time: ' + dt);
+})(); // invocation () on outside
+{% endhighlight %}
+
+**Iffies** are useful for executing initialization code once, code such as connecting event handlers or creating objects and object associations.  **Iffies** also create a local scope so we don't trash the global scope with unnecessary variables.  In the examples above 'dt' is local to the **iffy**, without it 'dt' would exist in the global scope.
+
+**Iffies** can be implemented to take parameters by including them in the expression.
+
+{% highlight javascript %}
+(function(param1, param2) {
+	//
+	// function body
+	// ...
+}('argument1', 'argument2'));
+
+(function(task, due) {
+	console.log('Task: ' + task + ' due on: ' + due);
+}("Trig Homework Assignment #1", new Date('2015', '0', '6')));
+
+{% endhighlight %}
+
+###Passing arguments
+
+Passing arguments to an **iffy** is often seen in Javascript code where jQuery is used.  Typically one passes jQuery as an argument of an **iffy** to guarantee '$' inside the function is indeed jQuery and not another framework that uses the popular '$' as an alias.
+
+{% highlight javascript %}
+(function($) {
+	console.log('logs jQuery version immediately: ' + $.fn.jquery);
+	$(document).ready(function(){
+		console.log('logs jQuery version when dom is ready: ' + $.fn.jquery);
+	});	
+}(jQuery));
+
+{% endhighlight %}
+
+###Returning values
+
+Like normal functions **iffies** can return values to the caller, keep in mind that an **iffy** is a function expression and function expressions can be assigned to a variable.  So if we assign an **iffy** to a variable, that variable will contain the return value from the immediate invocation.
+
+{% highlight javascript %}
+var task = (function(task, due) {
+	var task = 'Task: ' + task + ' due on: ' + due;
+	return task;
+}("Trig Homework Assignment #1", new Date('2015', '0', '6')));
+
+console.log(task);
+{% endhighlight %}
+
+###Use
+
+Hopefully now our understanding of **iffies** isn't so iffy anymore.  Its important to understand this micro-pattern so you can understand and write good code.  Main things to remember about **Iffies**:
+
++ **Iffies** are function expressions
++ They're invoked immediately after being defined
++ Typically used to run setup code
++ They provide local scope
+
+

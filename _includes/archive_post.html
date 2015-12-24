@@ -1,0 +1,14 @@
+<article class='blog-article'>
+    {% capture category %}
+        {{ post.categories | size }}
+    {% endcapture %}
+    <p>
+        <time datetime="{{ post.date | datetime | date_to_xmlschema }}" pubdate>{{ post.date | date: "<span class='month'>%b</span> <span class='day'>%d</span>"}}</time>
+        <a href="{{ root_url }}{{ post.url }}">{{post.title}}</a>
+    </p>
+    {% if category != '0' %}
+        <footer>
+          <span class="categories">posted in {{ post.categories | category_links }}</span>
+        </footer>
+    {% endif %}
+</article>
